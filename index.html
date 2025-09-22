@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Impacto del Nuevo Sistema – Ahorro de Tiempo</title>
+<meta name="color-scheme" content="light dark">
+<style>
+  :root{
+    --bg:#0f172a;         /* fondo */
+    --bg-soft:#111827;
+    --card:#0b1222;       /* tarjetas */
+    --ink:#e5e7eb;        /* texto principal */
+    --muted:#9ca3af;      /* texto suave */
+    --line:#1f2937;       /* bordes */
+    --accent:#60a5fa;     /* azul */
+    --accent2:#22d3ee;    /* cian */
+    --ok:#34d399;         /* verde */
+    --warn:#f59e0b;       /* ámbar */
+    --danger:#f87171;     /* rojo */
+    --ring:rgba(96,165,250,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+  margin:0; 
+  background:#000;   /* Fondo negro sólido */
+  color:var(--ink); 
+  font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Noto Sans",sans-serif;
+}
+  .wrap{max-width:1200px; margin:28px auto; padding:0 16px 80px}
+  header{display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-bottom:14px}
+  h1{margin:0; font-size:clamp(22px,3.6vw,36px); font-weight:800; letter-spacing:.2px; display:flex; align-items:center; gap:10px}
+  .dot{width:12px; height:12px; border-radius:999px; background:linear-gradient(135deg,var(--accent),var(--accent2)); box-shadow:0 0 22px var(--ring)}
+  .muted{color:var(--muted)}
+  .toolbar{margin-left:auto; display:flex; gap:8px}
+  .btn{
+    cursor:pointer; border:1px solid var(--line); background:linear-gradient(180deg,#0e152b,#0b1222);
+    color:var(--ink); padding:10px 14px; border-radius:12px; font-weight:700; transition:.15s ease; box-shadow:0 0 0 0 var(--ring)
+  }
+  .btn:hover{border-color:#334155; transform:translateY(-1px)}
+  .btn.ghost{background:transparent}
+  .grid{display:grid; grid-template-columns:repeat(12,1fr); gap:14px}
+  .card{
+    grid-column:span 6; background:linear-gradient(180deg,#0e152b,#0b1224);
+    border:1px solid var(--line); border-radius:16px; padding:16px; position:relative; min-height:120px
+  }
+  .card.kpi{grid-column:span 3; display:flex; flex-direction:column; gap:6px}
+  .card.wide{grid-column:1/-1}
+  .card h3{margin:0 0 6px; font-size:18px}
+  .pill{font-size:12px; border:1px solid #334155; border-radius:999px; padding:2px 8px; background:rgba(96,165,250,.12); color:#bfdbfe}
+  .k{font-size:13px; color:var(--muted)}
+  .v{font-size:28px; font-weight:800; letter-spacing:.2px}
+  .sub{font-size:13px; color:#a3e635}
+  .row{display:flex; gap:10px; flex-wrap:wrap}
+  .hl{background:rgba(255,230,0,.35); padding:.05em .25em; border-radius:4px}
+  /* Inputs */
+  .controls{grid-column:1/-1; display:grid; grid-template-columns:repeat(8,1fr); gap:10px}
+  .field{display:flex; flex-direction:column; gap:6px; border:1px solid var(--line); background:var(--card); border-radius:12px; padding:10px}
+  .field label{font-size:12px; color:var(--muted)}
+  .field input{
+    width:100%; border:0; outline:none; background:#0b1222; color:var(--ink);
+    border-radius:8px; padding:10px; font-weight:700
+  }
+  .field input[type=number]{appearance:textfield}
+  .field:focus-within{box-shadow:0 0 0 4px var(--ring); border-color:#334155}
+  /* Tabla resumen */
+  table{width:100%; border-collapse:collapse; font-size:14px}
+  th,td{border-top:1px solid #1f2a3c; padding:10px 8px; text-align:left}
+  th{color:#cbd5e1; font-weight:700}
+  /* Mini chart */
+  .bar{height:12px; background:#1f2937; border-radius:6px; overflow:hidden}
+  .bar > i{display:block; height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  /* SVG chart container */
+  .chart{width:100%; height:220px}
+  .note{font-size:12px; color:var(--muted)}
+  footer{margin-top:22px; color:var(--muted); text-align:center}
+  @media (max-width:900px){
+    .card{grid-column:span 12}
+    .card.kpi{grid-column:span 6}
+    .controls{grid-template-columns:repeat(2,1fr)}
+  }
+  @media print{
+    body{background:#fff; color:#000}
+    .card, .field{border-color:#ddd; background:#fff}
+    .toolbar{display:none}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>  Impacto del Nuevo Sistema – Ahorro de Tiempo</h1>
+      <div class="toolbar">
+        <button class="btn" onclick="window.print()">Imprimir</button>
+        <button class="btn ghost" id="fsBtn" title="Pantalla completa">Pantalla completa</button>
+      </div>
+    </header>
+
+    <!-- Parámetros (editables) -->
+    <section class="grid controls" id="controls">
+      <div class="field">
+        <label>Mensajes por operador / día</label>
+        <input id="msgs" type="number" min="0" value="35">
+      </div>
+      <div class="field">
+        <label>Ahorro por mensaje (segundos)</label>
+        <input id="msgSave" type="number" min="0" value="15">
+      </div>
+      <div class="field">
+        <label>Llamadas/consultas por operador / día</label>
+        <input id="calls" type="number" min="0" value="50">
+      </div>
+      <div class="field">
+        <label>Ahorro por llamada/consulta (segundos)</label>
+        <input id="callSave" type="number" min="0" value="20">
+      </div>
+      <div class="field">
+        <label>Operadores (equipo)</label>
+        <input id="ops" type="number" min="1" value="18">
+      </div>
+      <div class="field">
+        <label>Horas por operador / día</label>
+        <input id="hoursDay" type="number" min="1" value="6">
+      </div>
+      <div class="field">
+        <label>Días hábiles por semana</label>
+        <input id="daysWeek" type="number" min="1" max="7" value="5">
+      </div>
+      <div class="field">
+        <label>Semanas del período</label>
+        <input id="weeks" type="number" min="1" value="4">
+      </div>
+    </section>
+
+    <!-- KPIs -->
+    <section class="grid" style="margin-top:14px">
+      <article class="card kpi">
+        <span class="k">Ahorro diario por operador</span>
+        <div class="v" id="kpiOpDay">—</div>
+        <span class="sub">Detalle base en <span class="hl">segundos</span></span>
+      </article>
+      <article class="card kpi">
+        <span class="k">Ahorro semanal del equipo</span>
+        <div class="v" id="kpiTeamWeek">—</div>
+        <span class="sub">Con días hábiles seleccionados</span>
+      </article>
+      <article class="card kpi">
+        <span class="k">Ahorro mensual del equipo</span>
+        <div class="v" id="kpiTeamMonth">—</div>
+        <span class="sub">Dura el período configurado</span>
+      </article>
+      <article class="card kpi">
+        <span class="k">% de tiempo recuperado (operador)</span>
+        <div class="v" id="kpiPct">—</div>
+        <span class="sub">vs. jornada diaria</span>
+      </article>
+    </section>
+
+    <!-- Detalle en segundos -->
+    <section class="grid" style="margin-top:14px">
+      <article class="card">
+        <h3>1) Ahorro en <span class="hl">segundos</span> (detalle básico)</h3>
+        <div class="row">
+          <div>
+            <div class="k">Mensajes</div>
+            <div id="msgLine" class="v">—</div>
+          </div>
+          <div>
+            <div class="k">Llamadas / Consultas</div>
+            <div id="callLine" class="v">—</div>
+          </div>
+        </div>
+        <div class="k" style="margin-top:8px">Total diario por operador: <b id="opTotalSec">—</b> s (<span id="opTotalTime">—</span>)</div>
+      </article>
+
+      <article class="card">
+        <h3>2) Ahorro por operador</h3>
+        <table>
+          <tr><th>Diario</th><td id="opDay">—</td></tr>
+          <tr><th>Semanal</th><td id="opWeek">—</td></tr>
+          <tr><th>Mensual</th><td id="opMonth">—</td></tr>
+        </table>
+      </article>
+
+      <article class="card">
+        <h3>3) Ahorro del equipo ( <span id="opsLabel">—</span> operadores )</h3>
+        <table>
+          <tr><th>Diario</th><td id="teamDay">—</td></tr>
+          <tr><th>Semanal</th><td id="teamWeek">—</td></tr>
+          <tr><th>Mensual</th><td id="teamMonth">—</td></tr>
+        </table>
+      </article>
+
+      <article class="card">
+        <h3>4) Comparación directa</h3>
+        <div class="row" style="align-items:center">
+          <div style="flex:1">
+            <div class="k">Operador trabaja al mes</div>
+            <div class="bar" title="120 h por defecto">
+              <i id="barWork" style="width:100%"></i>
+            </div>
+            <div class="k" id="workLabel" style="margin-top:4px">—</div>
+          </div>
+          <div style="flex:1">
+            <div class="k">Ahorro del sistema (equipo / mes)</div>
+            <div class="bar">
+              <i id="barSave" style="width:0%"></i>
+            </div>
+            <div class="k" id="saveLabel" style="margin-top:4px">—</div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="pill" id="equiv">Equivalencia: —</div>
+          <div class="pill">Meta: aumentar cobertura sin contratar</div>
+        </div>
+      </article>
+
+      <article class="card wide">
+        <h3>5) Visual comparativa</h3>
+        <svg class="chart" viewBox="0 0 600 220" id="svgChart" role="img" aria-label="Comparación horas">
+          <!-- Ejes -->
+          <line x1="60" y1="180" x2="560" y2="180" stroke="#334155" stroke-width="2"/>
+          <!-- Barras dinámicas -->
+        </svg>
+        <div class="note">Comparación de horas: <span id="noteBars">—</span></div>
+      </article>
+    </section>
+
+    <footer class="note">
+      © 2025 —  Fernando Fierro • Plantilla HTML local (sin librerías) • Tip: presiona <kbd>Ctrl/Cmd + P</kbd> para imprimir en PDF.
+    </footer>
+  </div>
+
+<script>
+  const $ = sel => document.querySelector(sel);
+  const fmtHMS = s => {
+    const sign = s < 0 ? "-" : "";
+    s = Math.abs(s);
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = Math.round(s%60);
+    const pad = n => String(n).padStart(2,"0");
+    return h ? `${sign}${h} h ${pad(m)} min ${pad(sec)} s` : `${sign}${m} min ${pad(sec)} s`;
+  };
+  const fmtHours = h => {
+    const hh = Math.floor(h);
+    const mm = Math.round((h - hh) * 60);
+    return `${hh} h ${String(mm).padStart(2,"0")} min`;
+  };
+
+  // Inputs
+  const el = {
+    msgs: $('#msgs'),
+    msgSave: $('#msgSave'),
+    calls: $('#calls'),
+    callSave: $('#callSave'),
+    ops: $('#ops'),
+    hoursDay: $('#hoursDay'),
+    daysWeek: $('#daysWeek'),
+    weeks: $('#weeks')
+  };
+
+  function recompute(){
+    const msgs = Number(el.msgs.value||0);
+    const msgSave = Number(el.msgSave.value||0);
+    const calls = Number(el.calls.value||0);
+    const callSave = Number(el.callSave.value||0);
+    const ops = Math.max(1, Number(el.ops.value||1));
+    const hoursDay = Number(el.hoursDay.value||6);
+    const daysWeek = Number(el.daysWeek.value||5);
+    const weeks = Number(el.weeks.value||4);
+
+    // Base en segundos por operador (diario)
+    const msgTotalS = msgs * msgSave;            // 35*15 = 525
+    const callTotalS = calls * callSave;         // 50*20 = 1000
+    const opDayS = msgTotalS + callTotalS;       // 1525 s
+    const opDayH = opDayS / 3600;
+
+    // Proyecciones por operador
+    const opWeekH = opDayH * daysWeek;
+    const opMonthH = opDayH * daysWeek * weeks;
+
+    // Equipo
+    const teamDayH   = opDayH * ops;
+    const teamWeekH  = teamDayH * daysWeek;
+    const teamMonthH = teamDayH * daysWeek * weeks;
+
+    // Trabajo de un operador por mes (según jornada)
+    const workOpMonthH = hoursDay * daysWeek * weeks; // 6*5*4 = 120 h
+
+    // % recuperado (operador)
+    const pct = (opDayH / hoursDay) * 100;
+
+    // KPI
+    $('#kpiOpDay').textContent   = fmtHMS(opDayS);
+    $('#kpiTeamWeek').textContent= fmtHours(teamWeekH);
+    $('#kpiTeamMonth').textContent= fmtHours(teamMonthH);
+    $('#kpiPct').textContent     = `${pct.toFixed(2)}%`;
+
+    // Detalle base
+    $('#msgLine').textContent  = `${msgs} × ${msgSave}s = ${msgTotalS}s (${fmtHMS(msgTotalS)})`;
+    $('#callLine').textContent = `${calls} × ${callSave}s = ${callTotalS}s (${fmtHMS(callTotalS)})`;
+    $('#opTotalSec').textContent = opDayS.toLocaleString();
+    $('#opTotalTime').textContent = fmtHMS(opDayS);
+
+    // Por operador
+    $('#opDay').textContent   = fmtHours(opDayH);
+    $('#opWeek').textContent  = fmtHours(opWeekH);
+    $('#opMonth').textContent = fmtHours(opMonthH);
+
+    // Equipo
+    $('#opsLabel').textContent = ops;
+    $('#teamDay').textContent   = fmtHours(teamDayH);
+    $('#teamWeek').textContent  = fmtHours(teamWeekH);
+    $('#teamMonth').textContent = fmtHours(teamMonthH);
+
+    // Barras equivalencia
+    const rel = Math.min(1, teamMonthH / workOpMonthH); // para el ancho visual
+    $('#barWork').style.width = '100%';
+    $('#barSave').style.width = `${(teamMonthH/workOpMonthH)*100}%`;
+    $('#workLabel').textContent = `Trabajo de un operador/mes: ${fmtHours(workOpMonthH)}`;
+    $('#saveLabel').textContent = `Ahorro del sistema/mes (equipo): ${fmtHours(teamMonthH)}`;
+
+    const eq = teamMonthH / workOpMonthH; // p. ej., 152/120 = 1.27
+    $('#equiv').textContent = `Equivalencia: ${eq.toFixed(2)} operadores por mes`;
+
+    // SVG barras (operador vs ahorro de equipo)
+    const svg = $('#svgChart');
+    svg.querySelectorAll('.dyn').forEach(n=>n.remove());
+    const max = Math.max(workOpMonthH, teamMonthH);
+    const x0 = 90, yOp=90, yTeam=150, hBar=20, W=440;
+
+    const wOp   = (workOpMonthH/max) * W;
+    const wSave = (teamMonthH/max) * W;
+
+    const rect = (x,y,w,color,label,val) => {
+      const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+      g.setAttribute('class','dyn');
+      const r = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      r.setAttribute('x',x); r.setAttribute('y',y);
+      r.setAttribute('width',Math.max(2,w)); r.setAttribute('height',hBar);
+      r.setAttribute('rx','6'); r.setAttribute('fill',color);
+      const t1 = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t1.setAttribute('x',x-20); t1.setAttribute('y',y+hBar-4);
+      t1.setAttribute('fill','#cbd5e1'); t1.setAttribute('font-size','12');
+      t1.textContent = label;
+      const t2 = document.createElementNS('http://www.w3.org/2000/svg','text');
+      t2.setAttribute('x',x+w+10); t2.setAttribute('y',y+hBar-4);
+      t2.setAttribute('fill','#e5e7eb'); t2.setAttribute('font-size','12');
+      t2.textContent = val;
+      g.append(r,t1,t2); svg.append(g);
+    };
+    rect(x0,yOp,  wOp,  '#334155', 'Operador', fmtHours(workOpMonthH));
+    rect(x0,yTeam,wSave,'url(#grad1)', 'Ahorro equipo', fmtHours(teamMonthH));
+
+    // gradiente defs (una sola vez)
+    if(!svg.querySelector('#grad1')){
+      const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+      const grad = document.createElementNS('http://www.w3.org/2000/svg','linearGradient');
+      grad.setAttribute('id','grad1');
+      grad.setAttribute('x1','0'); grad.setAttribute('x2','1'); grad.setAttribute('y1','0'); grad.setAttribute('y2','0');
+      const s1=document.createElementNS('http://www.w3.org/2000/svg','stop'); s1.setAttribute('offset','0%');  s1.setAttribute('stop-color', '#60a5fa');
+      const s2=document.createElementNS('http://www.w3.org/2000/svg','stop'); s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','#22d3ee');
+      grad.append(s1,s2); defs.append(grad); svg.prepend(defs);
+    }
+
+    $('#noteBars').textContent =
+      `Operador/mes: ${fmtHours(workOpMonthH)}  •  Ahorro equipo/mes: ${fmtHours(teamMonthH)}  •  Equivalencia: ${eq.toFixed(2)} operadores`;
+  }
+
+  // Eventos
+  document.querySelectorAll('#controls input').forEach(i => i.addEventListener('input', recompute));
+
+  // Pantalla completa
+  $('#fsBtn').addEventListener('click', ()=>{
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  });
+
+  // Inicial
+  recompute();
+</script>
+</body>
+</html>
